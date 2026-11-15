@@ -3,14 +3,14 @@ import random
 from dataclasses import dataclass
 from typing import Sequence
 
-from dspark.residual_sample import (ResidualSampler,validate_distribution)
+from residual_sample import (ResidualSampler,validate_distribution)
 
 @dataclass(frozen=True)
 class AcceptanceResult:
     accepted_tokens: tuple[int,...]
     accepted_length: int
     rejected_index: int
-    replacement_index: int | None
+    replacement_token: int | None
 
     @property
     def all_accepted(self) -> bool:
@@ -38,7 +38,7 @@ class Acceptance:
     def accept(self,alpha:float)->bool:
         if not 0.0<=alpha<=1:
               raise ValueError("alpha should be in the range from 0 to 1")
-        random_value=self.rng.Random()
+        random_value=self.rng.random()
         return random_value<alpha
     
     @staticmethod 
@@ -58,4 +58,36 @@ class Acceptance:
         if len(target_probablities) != draft_length:
             raise ValueError("the length of target probs and draft lengths don't match")
         accepted_tokens=[]
-        
+
+        for index, token in enumerate(draft_tokens):
+            draft_distribution= draft_probablities[index]
+            target_distribution= target_probablities[index]
+            validate_distribution(draft_distribution)
+            validate_distribution(target_distribution)
+
+            if len(target_distribution) != len(draft_distribution):
+                raise ValueError("the len of the distribution don't match")
+            if not isinstance(token,int):
+                raise TypeError("ids must be in int")
+            if token<0 or token>=len(draft_distribution):
+                raise ValueError("draft token id is outside vocab")
+            p= target_distribution[token]
+            q= draft_distribution[token]
+            alpha=self.acceptance_probablity(p,q)
+            if self.accept(alpha):
+                 accepted_tokens.append(token)
+                 continue
+            replacement_token=(self.residual_sampler.sample_replacement(target_distribution,draft_distribution))
+            return AcceptanceResult(
+                 accepted_tokens=tuple(accepted_tokens),
+                 accepted_length=len(accepted_tokens),
+                 rejected_index= index,
+                 replacement_token=replacement_token
+            )
+        return AcceptanceResult(
+                         accepted_tokens=tuple(accepted_tokens),
+                         accepted_length=len(accepted_tokens),
+                         rejected_index= -1,
+                         replacement_token=None
+                    )
+             

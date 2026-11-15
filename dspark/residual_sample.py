@@ -12,7 +12,7 @@ def validate_distribution(distribution: Sequence[float], tolerance: float = 1e-9
           if probablity < 0.0:
                 raise ValueError("probablities cannot be in negative")
           total +=probablity
-    if not math.isclose(total,1.0,rel_total=tolerance,abs_total=tolerance):
+    if not math.isclose(total,1.0,rel_tol=tolerance,abs_tol=tolerance):
           raise ValueError("the distributio is not valid cause the sum is not 1")
 
 
