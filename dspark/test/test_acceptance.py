@@ -79,8 +79,7 @@ def test_residual_correction():
         target_probablities=[p]
     )
 
-    # Token 1 has acceptance probability 0.5.
-    # If rejected, residual sampling must select token 0.
+ 
 
     if not result.all_accepted:
 

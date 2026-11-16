@@ -15,7 +15,6 @@ counts = Counter()
 
 for _ in range(iterations):
 
-    # Generate one draft token from Q
     u = rng.random()
     cumulative = 0.0
 
@@ -28,7 +27,6 @@ for _ in range(iterations):
             draft_token = i
             break
 
-    # Verify the proposed token
     result = acceptance.verify_draft(
         draft_tokens=[draft_token],
         draft_probablities=[Q],
